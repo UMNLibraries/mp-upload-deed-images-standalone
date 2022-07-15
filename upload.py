@@ -90,9 +90,10 @@ class Uploader:
 
         # If necessary, wait before completing
         if self.min_thread_time > 0:
-            time_remaining = self.min_thread_time - time.time() - start_time
+            elapsed = time.time() - start_time
+            time_remaining = self.min_thread_time - elapsed
             if time_remaining > 0:
-                print(time_remaining)
+                print(f'Pausing {time_remaining} seconds')
                 time.sleep(time_remaining)
 
     def handle(self, *args, **kwargs):
