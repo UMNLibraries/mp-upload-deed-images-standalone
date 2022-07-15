@@ -1,0 +1,11 @@
+AWS_ACCESS_KEY_ID = 'my-access-key'
+AWS_SECRET_ACCESS_KEY = 'my-secret-key'
+AWS_STORAGE_BUCKET_NAME = 'my-bucket-name'
+
+WORKFLOW_SETTINGS = {
+    'WI Milwaukee County': {
+        'deed_image_glob_root': '/abs/path/to/image/root/',
+        'deed_image_glob_remainder': '**/*.tif',
+        'deed_image_regex': r'\/(?P<workflow_slug>[A-z\-]+)\/(?P<doc_date_year>\d{4})(?P<doc_date_month>\d{2})(?P<doc_date_day>\d{2})\/(?P<doc_num>[A-Z\d]+)_(?P<doc_type>[A-Z]+)_(?P<page_num>\d+)',
+    }
+}
