@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import glob
 import boto3
 import argparse
@@ -20,6 +21,7 @@ class Uploader:
              aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     s3 = None
     bucket = None
+    min_thread_time = 0
 
     def __init__(self, *args, **kwargs):
         self.add_arguments()
@@ -35,6 +37,9 @@ class Uploader:
 
         parser.add_argument('-p', '--pool', type=int,
                             help='How many threads to use? (Default is 8)')
+
+        parser.add_argument('-m', '--mintime', type=float,
+                            help='What is the minimum time to execute each thread (rate limit) in seconds (Default is 0)')
         self.args = parser.parse_args()
         print(self.args)
 
@@ -76,16 +81,24 @@ class Uploader:
         return remaining_to_upload
 
     def upload_image(self, key_dict):
+        start_time = time.time()
         print(f"Uploading {key_dict['s3_path']}")
         self.bucket.upload_file(
             key_dict['local_path'], key_dict['s3_path'], ExtraArgs={
               'StorageClass': self.raw_storage_class
             })
 
+        # If necessary, wait before completing
+        if self.min_thread_time > 0:
+            time_remaining = self.min_thread_time - time.time() - start_time
+            if time_remaining > 0:
+                time.sleep(time_remaining)
+
     def handle(self, *args, **kwargs):
         workflow_name = self.args.workflow
         load_from_cache = self.args.cache
         num_threads = self.args.pool if self.args.pool else 8
+        self.min_thread_time = self.args.mintime if self.args.mintime else 0
 
         if not workflow_name:
             print('Missing workflow name. Please specify with --workflow.')
