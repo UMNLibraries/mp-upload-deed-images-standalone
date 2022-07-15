@@ -4,7 +4,7 @@ This python command is designed to upload a large batch of images to S3 in a for
 
 Large caches of images suitable for racial covenants research may be stored in an inconvenient location, and it may be cumbersome to move them elsewhere at scale.
 
-The standalone uploader is designed for two specific scenarios:
+The standalone uploader is designed as a lightweight option for two specific scenarios:
 
 1. Deed images stored on a computer where it would be inconvenient to install the full Django deed machine locally due to version or platform constraints
 1. Deed images stored on a computer or network where it would be time-consuming to transfer the images to a better developer machine. Connecting to such a machine as a drive and treating the images as local files is also similarly slow at a scale of hundreds of thousands of files.
@@ -14,6 +14,8 @@ Before using this uploader script, you should have your s3 bucket set up and the
 After this process, the AWS step machine and lambdas will OCR the files, look for racial terms and generate a web-friendly jpeg.
 
 Please note that each of these steps will incur AWS costs.
+
+After this step, you should use deed machine commands to aggregate and ingest the results of this process from s3.
 
 ## Requirements
 - Python 3 (Have not tried 2)

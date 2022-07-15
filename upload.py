@@ -56,10 +56,12 @@ class Uploader:
         print("Checking s3 to see what images have already been uploaded...")
         s3 = self.session.resource('s3')
 
-        key_filter = re.compile(f"raw/{workflow_slug}/.+\.tif")
+        # key_filter = re.compile(f"raw/{workflow_slug}/.+\.tif")
+        # Look for jpgs that have made it all the way through the process
+        key_filter = re.compile(f"web/{workflow_slug}/.+\.jpg")
 
-        matching_keys = [obj.key for obj in self.bucket.objects.filter(
-            Prefix=f'raw/{workflow_slug}/'
+        matching_keys = [obj.key.replace('web/', 'raw/').replace('.jpg', '.tif') for obj in self.bucket.objects.filter(
+            Prefix=f'web/{workflow_slug}/'
         ) if re.match(key_filter, obj.key)]
 
         web_keys_to_check = [key['s3_path'] for key in upload_keys]
