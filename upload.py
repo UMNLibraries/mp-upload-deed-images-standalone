@@ -92,6 +92,7 @@ class Uploader:
         if self.min_thread_time > 0:
             time_remaining = self.min_thread_time - time.time() - start_time
             if time_remaining > 0:
+                print(time_remaining)
                 time.sleep(time_remaining)
 
     def handle(self, *args, **kwargs):
