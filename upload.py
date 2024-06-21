@@ -46,10 +46,14 @@ class Uploader:
         self.args = parser.parse_args()
         print(self.args)
 
-    def gather_raw_image_paths(self, workflow_slug, deed_image_glob_root, deed_image_glob_remainder):
+    def gather_raw_image_paths(self, workflow_slug, deed_image_glob_root, deed_image_glob_remainders):
         print("Gathering all raw images paths for this workflow ...")
-        print(os.path.join(deed_image_glob_root, deed_image_glob_remainder))
-        raw_images = glob.glob(os.path.join(deed_image_glob_root, deed_image_glob_remainder), recursive=True)
+        print(os.path.join(deed_image_glob_root, deed_image_glob_remainders))
+
+        raw_images = []
+
+        for path in deed_image_glob_remainders:
+            raw_images.extend(glob.glob(os.path.join(deed_image_glob_root, deed_image_glob_remainder), recursive=True))
 
         img_df = pd.DataFrame(raw_images, columns=['local_path'])
         img_df['remainder'] = img_df['local_path'].apply(lambda x: PurePosixPath(x).relative_to(deed_image_glob_root))
@@ -133,11 +137,11 @@ class Uploader:
 
             else:
                 print(
-                    "Scanning filesystem for local images using 'deed_image_glob_root', 'deed_image_glob_remainder' setting...")
+                    "Scanning filesystem for local images using 'deed_image_glob_root', 'deed_image_glob_remainders' setting...")
                 raw_img_df = self.gather_raw_image_paths(
                     workflow_slug,
                     workflow_config['deed_image_glob_root'],
-                    workflow_config['deed_image_glob_remainder'])
+                    workflow_config['deed_image_glob_remainders'])
 
                 raw_img_df.to_csv(os.path.join(
                     'data', f"{workflow_slug}_raw_images_list.csv"), index=False)
