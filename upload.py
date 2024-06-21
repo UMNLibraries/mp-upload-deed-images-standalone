@@ -93,7 +93,7 @@ class Uploader:
         already_uploaded = set(web_keys_to_check).intersection(matching_keys)
         print("Found intersection")
         remaining_to_upload = [
-            u for u in upload_keys if u['s3_path'] not in already_uploaded]
+            u for u in upload_keys if strip_raw_extension(u['s3_path']) not in already_uploaded]
         print(
             f"Found {len(already_uploaded)} images already uploaded, {len(remaining_to_upload)} remaining...")
 
