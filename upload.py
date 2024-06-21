@@ -64,16 +64,20 @@ class Uploader:
         )
         return img_df
 
+    def convert_key(self, json_key, raw_img_extension):
+        return re.sub('_SPLITPAGE_\d+', '', json_key).replace('ocr/json/', 'raw/').replace('.json', raw_img_extension)
+
     def check_already_uploaded(self, workflow_slug, upload_keys):
         print("Checking s3 to see what images have already been uploaded...")
         s3 = self.session.resource('s3')
 
-        key_filter = re.compile(f"raw/{workflow_slug}/.+\.tif")
+        key_filter = re.compile(f"ocr/json/{workflow_slug}/.+\.json")  # OCR JSON results
+        # key_filter = re.compile(f"raw/{workflow_slug}/.+\.tif")]
         # OLD: Look for jpgs that have made it all the way through the process
         # key_filter = re.compile(f"web/{workflow_slug}/.+\.jpg")
 
-        matching_keys = [obj.key for obj in self.bucket.objects.filter(
-            Prefix=f'raw/{workflow_slug}/'
+        matching_keys = [self.convert_key(obj.key, raw_img_extension) for obj in self.bucket.objects.filter(
+            Prefix=f'ocr/json/{workflow_slug}/'
         ) if re.match(key_filter, obj.key)]
 
         print(f"Found {len(matching_keys)} matching keys in bucket")
