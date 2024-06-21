@@ -48,11 +48,11 @@ class Uploader:
 
     def gather_raw_image_paths(self, workflow_slug, deed_image_glob_root, deed_image_glob_remainders):
         print("Gathering all raw images paths for this workflow ...")
-        print(os.path.join(deed_image_glob_root, deed_image_glob_remainders))
 
         raw_images = []
 
         for path in deed_image_glob_remainders:
+            print(os.path.join(deed_image_glob_root, path))
             raw_images.extend(glob.glob(os.path.join(deed_image_glob_root, path), recursive=True))
 
         img_df = pd.DataFrame(raw_images, columns=['local_path'])
