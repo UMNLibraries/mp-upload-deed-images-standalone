@@ -53,7 +53,7 @@ class Uploader:
         raw_images = []
 
         for path in deed_image_glob_remainders:
-            raw_images.extend(glob.glob(os.path.join(deed_image_glob_root, deed_image_glob_remainder), recursive=True))
+            raw_images.extend(glob.glob(os.path.join(deed_image_glob_root, path), recursive=True))
 
         img_df = pd.DataFrame(raw_images, columns=['local_path'])
         img_df['remainder'] = img_df['local_path'].apply(lambda x: PurePosixPath(x).relative_to(deed_image_glob_root))
