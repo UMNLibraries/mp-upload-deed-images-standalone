@@ -68,7 +68,7 @@ class Uploader:
         return re.sub('_SPLITPAGE_\d+', '', json_key).replace('ocr/json/', 'raw/').replace('.json', '.raw_ext')
     
     def strip_raw_extension(self, raw_key):
-        return re.sub(r'\.[A-Za-z]{3,4}$', '.raw_ext', raw_key)
+        return re.sub(r'\.[A-Za-z0-9]{3,4}$', '.raw_ext', raw_key)
 
     def check_already_uploaded(self, workflow_slug, upload_keys):
         print("Checking s3 to see what images have already been uploaded...")
