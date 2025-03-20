@@ -25,7 +25,7 @@ class Uploader:
 
     def __init__(self, *args, **kwargs):
         self.add_arguments()
-        self.handle(*args, **kwargs)
+        # self.handle(*args, **kwargs)
 
     def add_arguments(self):
         parser = argparse.ArgumentParser(description='Uploader options')
@@ -65,32 +65,38 @@ class Uploader:
         return img_df
 
     def convert_json_to_raw(self, json_key):
-        return re.sub('_SPLITPAGE_\d+', '', json_key).replace('ocr/json/', 'raw/').replace('.json', '.raw_ext')
+        return re.sub(r'_SPLITPAGE_\d+', '', json_key).replace('ocr/json/', 'raw/').replace('.json', '.raw_ext')
     
     def strip_raw_extension(self, raw_key):
-        return re.sub(r'\.[A-Za-z0-9]{3,4}$', '.raw_ext', raw_key)
+        norm_ext_filtered = re.sub(r'\.[A-Za-z]{3,4}$', '.raw_ext', raw_key)
+        num_ext_filtered = re.sub(r'\.(\d{3})$', r'.\1.raw_ext', norm_ext_filtered)
+        return num_ext_filtered
 
-    def check_already_uploaded(self, workflow_slug, upload_keys):
+    def check_already_uploaded(self, workflow_slug):
         print("Checking s3 to see what images have already been uploaded...")
         s3 = self.session.resource('s3')
 
-        key_filter = re.compile(f"ocr/json/{workflow_slug}/.+\.json")  # OCR JSON results
+        key_filter = re.compile(fr"ocr/json/{workflow_slug}/.+\.json")  # OCR JSON results
         # key_filter = re.compile(f"raw/{workflow_slug}/.+\.tif")]
         # OLD: Look for jpgs that have made it all the way through the process
         # key_filter = re.compile(f"web/{workflow_slug}/.+\.jpg")
 
-        matching_keys = [self.convert_json_to_raw(obj.key) for obj in self.bucket.objects.filter(
+        all_expected_json_keys = [self.convert_json_to_raw(obj.key) for obj in self.bucket.objects.filter(
             Prefix=f'ocr/json/{workflow_slug}/'
         ) if re.match(key_filter, obj.key)]
 
-        print(f"Found {len(matching_keys)} matching keys in bucket")
+        print(f"Found {len(all_expected_json_keys)} matching keys in bucket")
+
+        return all_expected_json_keys
+
+    def compare_key_sets(self, upload_keys, all_expected_json_keys):
 
         web_keys_to_check = [self.strip_raw_extension(key['s3_path']) for key in upload_keys]
 
         print("Processed matching keys")
 
         # subtract already uploaded matching_keys from web_keys_to_check
-        already_uploaded = set(web_keys_to_check).intersection(matching_keys)
+        already_uploaded = set(web_keys_to_check).intersection(all_expected_json_keys)
         print("Found intersection")
         remaining_to_upload = [
             u for u in upload_keys if self.strip_raw_extension(u['s3_path']) not in already_uploaded]
@@ -115,7 +121,7 @@ class Uploader:
                 print(f'Pausing {time_remaining} seconds')
                 time.sleep(time_remaining)
 
-    def handle(self, *args, **kwargs):
+    def handle(self):
         workflow_name = self.args.workflow
         load_from_cache = self.args.cache
         num_threads = self.args.pool if self.args.pool else 8
@@ -161,8 +167,10 @@ class Uploader:
             self.s3 = self.session.resource('s3')
             self.bucket = self.s3.Bucket(AWS_STORAGE_BUCKET_NAME)
 
-            filtered_upload_keys = self.check_already_uploaded(
-                workflow_slug, upload_keys)
+            all_expected_json_keys = self.check_already_uploaded(
+                workflow_slug)
+            
+            filtered_upload_keys = self.compare_key_sets(upload_keys, all_expected_json_keys)
 
             if self.args.dry:
                 # Exit without uploading.
@@ -171,4 +179,6 @@ class Uploader:
             pool = ThreadPool(processes=num_threads)
             pool.map(self.upload_image, filtered_upload_keys)
 
-uploader = Uploader()
+if __name__ == "__main__":
+    uploader = Uploader()
+    uploader.handle()
